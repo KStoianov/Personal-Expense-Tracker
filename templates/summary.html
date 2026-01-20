@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Summary - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="summary-container">
+    <h1>Monthly Summary</h1>
+
+    <div class="summary-cards">
+        <div class="card income">
+            <h3>Total Income</h3>
+            <p class="amount">${{ "%.2f"|format(total_income) }}</p>
+        </div>
+        <div class="card expense">
+            <h3>Total Expenses</h3>
+            <p class="amount">${{ "%.2f"|format(total_expense) }}</p>
+        </div>
+        <div class="card savings {% if net_savings >= 0 %}positive{% else %}negative{% endif %}">
+            <h3>Net Savings</h3>
+            <p class="amount">${{ "%.2f"|format(net_savings) }}</p>
+        </div>
+    </div>
+
+    <div class="analytics-section">
+        <h2>Spending by Category</h2>
+        {% if spending_by_category %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Total Spent</th>
+                    <th>Percentage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set total_spending = spending_by_category|sum(attribute='total') %}
+                {% for item in spending_by_category %}
+                <tr>
+                    <td>{{ item['name'] }}</td>
+                    <td>${{ "%.2f"|format(item['total']) }}</td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: {{ (item['total'] / total_spending * 100)|int }}%">
+                            </div>
+                        </div>
+                        {{ "%.1f"|format(item['total'] / total_spending * 100) }}%
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No expenses this month.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

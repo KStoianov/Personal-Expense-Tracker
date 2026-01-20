@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h1>Welcome, {{ session.name }}! 👋</h1>
+
+    <div class="summary-section">
+        <h2>This Month</h2>
+        <div class="summary-cards">
+            <div class="card income">
+                <h3>Monthly Income</h3>
+                <p class="amount">${{ "%.2f"|format(total_income) }}</p>
+            </div>
+            <div class="card expense">
+                <h3>Monthly Expenses</h3>
+                <p class="amount">${{ "%.2f"|format(total_expense) }}</p>
+            </div>
+            <div class="card savings {% if net_savings >= 0 %}positive{% else %}negative{% endif %}">
+                <h3>Net Savings</h3>
+                <p class="amount">${{ "%.2f"|format(net_savings) }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="summary-section">
+        <h2>Overall (All Time)</h2>
+        <div class="summary-cards">
+            <div class="card income">
+                <h3>Total Income</h3>
+                <p class="amount">${{ "%.2f"|format(overall_income) }}</p>
+            </div>
+            <div class="card expense">
+                <h3>Total Expenses</h3>
+                <p class="amount">${{ "%.2f"|format(overall_expense) }}</p>
+            </div>
+            <div class="card savings {% if overall_savings >= 0 %}positive{% else %}negative{% endif %}">
+                <h3>Total Savings</h3>
+                <p class="amount">${{ "%.2f"|format(overall_savings) }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="monthly-breakdown">
+        <h2>Monthly Breakdown</h2>
+        {% if monthly_breakdown %}
+        <div class="month-selector">
+            <label for="month-filter">Filter by Month:</label>
+            <select id="month-filter" onchange="filterMonth(this.value)">
+                <option value="">View All Months</option>
+                {% for month_data in monthly_breakdown %}
+                <option value="{{ month_data['month'] }}">{{ month_data['month'] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <table class="monthly-table">
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Income</th>
+                    <th>Expenses</th>
+                    <th>Net Savings</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for month_data in monthly_breakdown %}
+                <tr class="month-row" data-month="{{ month_data['month'] }}">
+                    <td class="month-name">{{ month_data['month'] }}</td>
+                    <td class="amount-income">${{ "%.2f"|format(month_data['total_income']) }}</td>
+                    <td class="amount-expense">${{ "%.2f"|format(month_data['total_expense']) }}</td>
+                    <td
+                        class="amount-savings {% if month_data['total_income'] - month_data['total_expense'] >= 0 %}positive{% else %}negative{% endif %}">
+                        ${{ "%.2f"|format(month_data['total_income'] - month_data['total_expense']) }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No transaction data available.</p>
+        {% endif %}
+    </div>
+
+    <div class="recent-transactions">
+        <h2>Recent Transactions</h2>
+        {% if transactions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trans in transactions %}
+                <tr>
+                    <td>{{ trans['date'] }}</td>
+                    <td>{{ trans['category_name'] }}</td>
+                    <td>{{ trans['description'] or '-' }}</td>
+                    <td><span class="badge badge-{{ trans['type'] }}">{{ trans['type'].upper() }}</span></td>
+                    <td class="amount-{{ trans['type'] }}">{{ "%.2f"|format(trans['amount']) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{{ url_for('transactions') }}" class="btn btn-secondary">View All Transactions</a>
+        {% else %}
+        <p>No transactions yet. <a href="{{ url_for('add_transaction') }}">Add one now!</a></p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function filterMonth(month) {
+        const rows = document.querySelectorAll('.month-row');
+        rows.forEach(row => {
+            if (month === '' || row.dataset.month === month) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}

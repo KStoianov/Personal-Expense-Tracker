@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Categories - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="categories-container">
+    <h1>Categories</h1>
+
+    <div class="add-category">
+        <form method="POST" class="form-inline">
+            <input type="text" name="category_name" placeholder="Enter category name" required>
+            <button type="submit" class="btn btn-primary">+ Add Category</button>
+        </form>
+    </div>
+
+    <div class="categories-list">
+        {% if categories %}
+        <div class="category-grid">
+            {% for category in categories %}
+            <div class="category-card">
+                <h3>{{ category['name'] }}</h3>
+                <div class="category-actions">
+                    <form method="POST" action="{{ url_for('edit_category', cat_id=category['id']) }}"
+                        style="display:inline;">
+                        <input type="text" name="category_name" value="{{ category['name'] }}" required>
+                        <button type="submit" class="btn-small btn-edit">Update</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('delete_category', cat_id=category['id']) }}"
+                        style="display:inline;">
+                        <button type="submit" class="btn-small btn-delete"
+                            onclick="return confirm('Are you sure?')">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>No categories yet. Create one above!</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

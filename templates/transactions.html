@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="transactions-container">
+    <h1>All Transactions</h1>
+
+    <div class="filters">
+        <form method="GET" class="filter-form">
+            <div class="form-group">
+                <label for="type">Type:</label>
+                <select id="type" name="type">
+                    <option value="">All Types</option>
+                    <option value="income" {% if filter_type=='income' %}selected{% endif %}>Income</option>
+                    <option value="expense" {% if filter_type=='expense' %}selected{% endif %}>Expense</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="category">Category:</label>
+                <select id="category" name="category">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category['id'] }}" {% if filter_category==category['id']|string %}selected{% endif
+                        %}>
+                        {{ category['name'] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="start_date">Start Date:</label>
+                <input type="date" id="start_date" name="start_date" value="{{ filter_start_date }}">
+            </div>
+
+            <div class="form-group">
+                <label for="end_date">End Date:</label>
+                <input type="date" id="end_date" name="end_date" value="{{ filter_end_date }}">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{{ url_for('transactions') }}" class="btn btn-secondary">Clear</a>
+        </form>
+    </div>
+
+    <div class="transactions-list">
+        {% if transactions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trans in transactions %}
+                <tr>
+                    <td>{{ trans['date'] }}</td>
+                    <td>{{ trans['category_name'] }}</td>
+                    <td>{{ trans['description'] or '-' }}</td>
+                    <td><span class="badge badge-{{ trans['type'] }}">{{ trans['type'].upper() }}</span></td>
+                    <td class="amount-{{ trans['type'] }}">{{ "%.2f"|format(trans['amount']) }}</td>
+                    <td class="actions">
+                        <a href="{{ url_for('edit_transaction', trans_id=trans['id']) }}"
+                            class="btn-small btn-edit">Edit</a>
+                        <form method="POST" action="{{ url_for('delete_transaction', trans_id=trans['id']) }}"
+                            style="display:inline;">
+                            <button type="submit" class="btn-small btn-delete"
+                                onclick="return confirm('Are you sure?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No transactions found. <a href="{{ url_for('add_transaction') }}">Add one now!</a></p>
+        {% endif %}
+    </div>
+
+    <div class="transaction-actions">
+        <a href="{{ url_for('add_transaction') }}" class="btn btn-primary">+ Add Transaction</a>
+        <button onclick="exportTransactions()" class="btn btn-secondary">📥 Export CSV</button>
+    </div>
+</div>
+
+<script>
+    function exportTransactions() {
+        fetch('{{ url_for("export") }}')
+            .then(response => response.json())
+            .then(data => {
+                const link = document.createElement('a');
+                link.href = data.file;
+                link.download = data.file.split('/').pop();
+                link.click();
+            });
+    }
+</script>
+{% endblock %}
